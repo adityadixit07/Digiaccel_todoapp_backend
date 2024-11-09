@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin:"*"
+    origin: "*",
     methods: "GET,POST,PUT,DELETE",
     // allowedHeaders: "Content-Type,Authorization",
     AccessControlAllowOrigin: "*",
