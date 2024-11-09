@@ -30,11 +30,3 @@ app.use("/api", todoRoutes);
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-// Serve static files from the frontend/dist folder
-app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-// Serve the index.html file on the root route
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
