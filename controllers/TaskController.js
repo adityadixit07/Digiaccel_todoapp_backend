@@ -150,6 +150,7 @@ class TaskController {
         });
       }
 
+      // Update task status
       const updatedTask = await Task.findByIdAndUpdate(
         id,
         { status },
@@ -160,6 +161,22 @@ class TaskController {
         return res.status(404).json({ message: "Task not found" });
       }
 
+      // Calculate the start and end of the current week
+      const currentDate = new Date();
+      const weekStart = new Date(
+        currentDate.setDate(currentDate.getDate() - currentDate.getDay())
+      );
+      weekStart.setHours(0, 0, 0, 0); // Start of the day
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      weekEnd.setHours(23, 59, 59, 999); // End of the day
+
+      // Fetch weekly tasks based on the date range
+      const weeklyTasks = await Task.find({
+        createdAt: { $gte: weekStart, $lte: weekEnd },
+      });
+
+      // Calculate the open and completed tasks count
       const openTasks = weeklyTasks.filter(
         (task) => task.status !== "Completed"
       ).length;
@@ -167,6 +184,7 @@ class TaskController {
         (task) => task.status === "Completed"
       ).length;
 
+      // Send response
       res.status(200).json({
         message: "Task status updated successfully",
         task: updatedTask,
@@ -181,6 +199,7 @@ class TaskController {
       res.status(500).json({ message: "Error updating task status", error });
     }
   }
+
   static async updateTaskPriority(req, res) {
     try {
       const { id } = req.params;
@@ -213,7 +232,45 @@ class TaskController {
     }
   }
 
-  // Get Weekly Task Summary
+  static async updateTask(req, res) {
+    try {
+      const { id } = req.params;
+      const { title, description, dateTime, priority, status } = req.body;
+
+      // Construct update object dynamically
+      const updateFields = {};
+
+      if (title !== undefined) updateFields.title = title;
+      if (description !== undefined) updateFields.description = description;
+      if (dateTime && dateTime.startTime && dateTime.endTime) {
+        updateFields.dateTime = {
+          startTime: dateTime.startTime,
+          endTime: dateTime.endTime,
+        };
+      }
+      if (priority !== undefined) updateFields.priority = priority;
+      if (status !== undefined) updateFields.status = status;
+
+      // Update the task
+      const updatedTask = await Task.findByIdAndUpdate(id, updateFields, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (!updatedTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      res.status(200).json({
+        message: "Task updated successfully",
+        task: updatedTask,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error updating task", error });
+    }
+  }
+
   // Get Weekly Task Summary
   static async getWeeklySummary(req, res) {
     try {
